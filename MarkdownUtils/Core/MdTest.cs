@@ -15,18 +15,9 @@ namespace MarkdownUtils.Core
     {
         public MdTest()
         {
-            var mdText = File.ReadAllText(@"C:\Users\Mikhail\Google Drive\md-notes\zomp-DataLayerChanges.md");
-            var doc = CommonMarkConverter.Parse(mdText);
-            //var result = CommonMarkConverter.Convert(mdText);
-            //File.WriteAllText(@"C:\Users\Mikhail\Desktop\___test.html", result);
-
-            Debug.WriteLine("\n\n\n\n\n\n=========================================================================\n\n\n");
-            CallFuckingLoop2(doc.FirstChild, "");
-
-            //CallFuckingLoop(doc, CommonMarkSettings.Default);
         }
 
-        private void CallFuckingLoop2_inline(Inline inlineGuy, string howDeepInTheShitAreWe)
+        private void LoopThroughInlines(Inline inlineGuy, string howDeepInTheShitAreWe)
         {
             var inlineSibs = inlineGuy;
             while (inlineSibs != null)
@@ -37,19 +28,19 @@ namespace MarkdownUtils.Core
                 if (inlineSibs.FirstChild != null)
                 {
                     Debug.WriteLine(howDeepInTheShitAreWe + " inline-children:");
-                    CallFuckingLoop2_inline(inlineSibs.FirstChild, " > " + howDeepInTheShitAreWe);
+                    LoopThroughInlines(inlineSibs.FirstChild, " > " + howDeepInTheShitAreWe);
                 }
                 inlineSibs = inlineSibs.NextSibling;
             }
         }
-        private void CallFuckingLoop2(Block curBlock, string howDeepInTheShitAreWe)
+        private void LoopThroughBlocks(Block curBlock, string howDeepInTheShitAreWe)
         {
             while (curBlock != null)
             {
                 Debug.WriteLine(howDeepInTheShitAreWe + $"-------- block: {curBlock.Tag} (H{curBlock.HeaderLevel}) --------");
                 if (curBlock.InlineContent != null)
                 {
-                    CallFuckingLoop2_inline(curBlock.InlineContent, howDeepInTheShitAreWe);
+                    LoopThroughInlines(curBlock.InlineContent, howDeepInTheShitAreWe);
                 }
                 if (curBlock.StringContent != null)
                 {
@@ -61,7 +52,7 @@ namespace MarkdownUtils.Core
                 if (curBlock.FirstChild != null)
                 {
                     Debug.WriteLine(howDeepInTheShitAreWe + " block-children");
-                    CallFuckingLoop2(curBlock.FirstChild, " > " + howDeepInTheShitAreWe);
+                    LoopThroughBlocks(curBlock.FirstChild, " > " + howDeepInTheShitAreWe);
                 }
                 curBlock = curBlock.NextSibling;
             }
