@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MarkdownUtils.MdDoc;
+using MarkdownUtils.MdAnimated;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +15,16 @@ namespace MarkdownUtils.Core
 
         }
 
-        //public 
+        public MdAnimatedDocument MdDocument2Animated(MdDocument mdDoc)
+        {
+            var result = new MdAnimatedDocument();
+            foreach (var block in mdDoc.Blocks)
+            {
+                var curPage = new MdAnimatedBlock();
+                result.Pages.Add(curPage);
+            }
+
+            return result;
+        }
     }
 }

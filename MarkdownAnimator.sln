@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miktemk", "..\MiktemkCommon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarkdownUtils", "MarkdownUtils\MarkdownUtils.csproj", "{2FE7ABAC-DEEA-4BE0-A82F-1C54FA600FA9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZUnitTests", "ZUnitTests\ZUnitTests.csproj", "{E27F4B9C-C5FF-456F-9D2D-59211CB08D38}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{2FE7ABAC-DEEA-4BE0-A82F-1C54FA600FA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FE7ABAC-DEEA-4BE0-A82F-1C54FA600FA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FE7ABAC-DEEA-4BE0-A82F-1C54FA600FA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E27F4B9C-C5FF-456F-9D2D-59211CB08D38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E27F4B9C-C5FF-456F-9D2D-59211CB08D38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E27F4B9C-C5FF-456F-9D2D-59211CB08D38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E27F4B9C-C5FF-456F-9D2D-59211CB08D38}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -16,6 +16,11 @@ namespace MarkdownUtils.MdAnimated
     {
         public string Code { get; set; }
         public TtsContentWithKeyPoints TtsContent { get; set; }
+
+        public MdAnimatedBlock()
+        {
+            TtsContent = new TtsContentWithKeyPoints();
+        }
     }
     public class TtsContentWithKeyPoints
     {

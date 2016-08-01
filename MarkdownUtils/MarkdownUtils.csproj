@@ -46,7 +46,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\MdAnimatedConverter.cs" />
-    <Compile Include="Core\MdTest.cs" />
     <Compile Include="Core\MdDocumentConverter.cs" />
     <Compile Include="MdAnimated\MdAnimatedDocument.cs" />
     <Compile Include="MdDoc\MdDocument.cs" />

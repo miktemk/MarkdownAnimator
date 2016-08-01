@@ -1,6 +1,8 @@
 ﻿using CommonMark;
 using MarkdownUtils.Core;
+using MarkdownUtils.MdDoc;
 using Miktemk;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,7 +25,14 @@ namespace ZConsoleTests
             var converter = new MdDocumentConverter();
             var mdDoc = converter.CommonMark2MdDocument(doc);
 
-            XmlFactory.WriteToFile(mdDoc, @"C:\Users\Mikhail\Desktop\___test.xml");
+            var converterAnim = new MdAnimatedConverter();
+            var mdDocAnim = converterAnim.MdDocument2Animated(mdDoc);
+
+            File.WriteAllText(@"C:\Users\Mikhail\Desktop\mdDoc.json", JsonConvert.SerializeObject(mdDoc, Formatting.Indented));
+            //File.WriteAllText(@"C:\Users\Mikhail\Desktop\mdDocAnim.json", JsonConvert.SerializeObject(mdDocAnim, Formatting.Indented));
+
+            //XmlFactory.WriteToFile(mdDoc, @"C:\Users\Mikhail\Desktop\mdDoc.xml");
+            //XmlFactory.WriteToFile(mdDoc, @"C:\Users\Mikhail\Desktop\mdDocAnim.xml");
         }
     }
 }

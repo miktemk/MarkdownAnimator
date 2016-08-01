@@ -1,11 +1,11 @@
-﻿using MarkdownUtils.MarkdownSimple;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommonMark.Syntax;
 using System.IO;
+using MarkdownUtils.MdDoc;
 
 namespace MarkdownUtils.Core
 {
