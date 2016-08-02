@@ -7,14 +7,17 @@ using System.Text;
 using Miktemk;
 using System.Threading.Tasks;
 using CommonMark.Syntax;
+using MarkdownUtils.Properties;
 
 namespace MarkdownUtils.Core
 {
     public class MdAnimatedConverter
     {
+        private readonly string[] NotesHeaders;
+
         public MdAnimatedConverter()
         {
-
+            NotesHeaders = Settings.Default.NotesText.Split('|');
         }
 
         public MdAnimatedDocument MdDocument2Animated(MdDocument mdDoc)
@@ -55,9 +58,40 @@ namespace MarkdownUtils.Core
 
         private IEnumerable<IEnumerable<MdBlock>> SplitMdSectionsIntoCodeBlocksNotesConsidered(IEnumerable<MdBlock> sectionBlocks)
         {
-            var codeSplit = sectionBlocks.SplitEnumerableEndingWith(b => IsCodeBlock(b));
-            // TODO: move Notes:, etc to prev sublists
-            return codeSplit;
+            var codeSplit = sectionBlocks
+                .SplitEnumerableEndingWith(b => IsCodeBlock(b))
+                .ToArray();
+            codeSplit.EnumerateWithIndex((codeBlock, index) =>
+            {
+                var head = codeBlock.FirstOrDefault();
+                if (head == null)
+                    return;
+                if (IsMdBlockNotesColon(head) && index > 0 && codeBlock.Count() >= 2)
+                {
+                    // move Notes:, etc to prev sublists
+                    var first2 = codeBlock.Take(2);
+                    codeSplit[index] = codeSplit[index].Skip(2);
+                    codeSplit[index-1] = codeSplit[index].Union(first2);
+                }
+            });
+            return codeSplit.Where(x => x.Any()); // remove empty entries
+        }
+
+        private bool IsMdBlockNotesColon(MdBlock head)
+        {
+            var headInlineFirst = head.Inline.FirstOrDefault();
+            if (headInlineFirst == null)
+                return false;
+            return NotesHeaders.Any(nnn => CompareIgnoreWhitespace(nnn, headInlineFirst.Text));
+        }
+
+        private bool CompareIgnoreWhitespace(string a, string b)
+        {
+            if (a != null)
+                a = a.Trim();
+            if (b != null)
+                b = b.Trim();
+            return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
         }
 
         private string GetAllParaTextInlineAndAll(MdBlock para)
