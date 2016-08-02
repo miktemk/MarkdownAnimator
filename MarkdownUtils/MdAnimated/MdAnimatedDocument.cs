@@ -24,13 +24,14 @@ namespace MarkdownUtils.MdAnimated
     }
     public class TtsContentWithKeyPoints
     {
-        public MultiLanguageText TtsText { get; set; }
+        //public MultiLanguageText TtsText { get; set; }
+        public string TtsText { get; set; }
         public List<TtsKeyPoint> KeyPoints { get; } = new List<TtsKeyPoint>();
     }
     public class TtsKeyPoint
     {
         public int AtWhatChar { get; set; }
-        public string Token { get; set; }
+        public string Token { get; set; } // TODO: more ways to identifu tokens
         public MdTokenType TokenType { get; set; }
     }
     public enum MdTokenType
