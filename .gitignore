@@ -58,3 +58,4 @@ ZConsoleTests/obj/*
 ZUnitTests/obj/*
 ZUnitTests/obj/*
 packages/*
+.vs/*
