@@ -55,6 +55,6 @@ MarkdownUtils/bin/*
 MarkdownUtils/obj/*
 ZConsoleTests/bin/*
 ZConsoleTests/obj/*
-ZUnitTests/obj/*
+ZUnitTests/bin/*
 ZUnitTests/obj/*
 packages/*

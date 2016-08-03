@@ -32,15 +32,13 @@ namespace MarkdownUtils.Core
                 foreach (var pageParagraphs in splitCodes)
                 {
                     sbPageText.Clear();
-                    var curPage = new MdAnimatedBlock();
+                    var code = "";
                     foreach (var para in pageParagraphs)
                     {
                         if (IsCodeBlock(para))
                         {
-                            // this is the end of pageParagraphs
-                            curPage.Code = para.StringContent;
-                            curPage.TtsContent.TtsText = sbPageText.ToString();
-                            // TODO: parse this string
+                            // this it the code... potentially some notes after it...
+                            code = para.StringContent;
                         }
                         else
                         {
@@ -49,7 +47,12 @@ namespace MarkdownUtils.Core
                             sbPageText.Append("\n");
                         }
                     }
-                    result.Pages.Add(curPage);
+                    var newPage = new MdAnimatedBlock
+                    {
+                        Code = code,
+                    };
+                    newPage.TtsContent.TtsText = sbPageText.ToString(); // TODO: parse this string
+                    result.Pages.Add(newPage);
                 }
             }
 
@@ -69,12 +72,14 @@ namespace MarkdownUtils.Core
                 if (IsMdBlockNotesColon(head) && index > 0 && codeBlock.Count() >= 2)
                 {
                     // move Notes:, etc to prev sublists
-                    var first2 = codeBlock.Take(2);
+                    //var oopsTheseBelongToPrev = codeBlock.Skip(1).Take(2); // .... do not skip "Notes:"
+                    var oopsTheseBelongToPrev = codeBlock.Skip(1).Take(2); // .... skip "Notes:"
                     codeSplit[index] = codeSplit[index].Skip(2);
-                    codeSplit[index-1] = codeSplit[index].Union(first2);
+                    codeSplit[index-1] = codeSplit[index-1].Union(oopsTheseBelongToPrev).ToArray();
                 }
             });
-            return codeSplit.Where(x => x.Any()); // remove empty entries
+            return codeSplit.Where(x => x.Any()); // .... remove empty entries
+            //return codeSplit;
         }
 
         private bool IsMdBlockNotesColon(MdBlock head)
