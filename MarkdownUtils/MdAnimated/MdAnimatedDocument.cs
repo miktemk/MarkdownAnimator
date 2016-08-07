@@ -9,6 +9,12 @@ namespace MarkdownUtils.MdAnimated
 {
     public class MdAnimatedDocument
     {
+        public string Title { get; set; }
+        public List<MdAnimatedDocumentSection> Sections { get; } = new List<MdAnimatedDocumentSection>();
+    }
+    public class MdAnimatedDocumentSection
+    {
+        public string Title { get; set; }
         public List<MdAnimatedBlock> Pages { get; } = new List<MdAnimatedBlock>();
     }
     // TODO: abstract this class for other content such as images, etc
@@ -26,17 +32,18 @@ namespace MarkdownUtils.MdAnimated
     {
         //public MultiLanguageText TtsText { get; set; }
         public string TtsText { get; set; }
-        public List<TtsKeyPoint> KeyPoints { get; } = new List<TtsKeyPoint>();
+        public List<TtsKeyPoint> KeyPoints { get; set; }
     }
     public class TtsKeyPoint
     {
         public int AtWhatChar { get; set; }
         public string Token { get; set; } // TODO: more ways to identifu tokens
-        public MdTokenType TokenType { get; set; }
+        public MdKeyPointType KeyPointType { get; set; }
     }
-    public enum MdTokenType
+    public enum MdKeyPointType
     {
         String,
         Regex,
+        HighlightLines,
     }
 }

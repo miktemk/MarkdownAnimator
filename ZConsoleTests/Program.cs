@@ -17,9 +17,10 @@ namespace ZConsoleTests
     {
         static void Main(string[] args)
         {
-            const string userName = "miktemk";
+            //const string userName = "miktemk";
+            const string userName = "Mikhail";
 
-            var mdText = File.ReadAllText($@"C:\Users\{userName}\Google Drive\md-notes\mdanim-sample.md");
+            var mdText = File.ReadAllText($@"C:\Users\{userName}\Google Drive\md-notes\js-regex.md");
             var doc = CommonMarkConverter.Parse(mdText);
             //var result = CommonMarkConverter.Convert(mdText);
             //File.WriteAllText(@"C:\Users\Mikhail\Desktop\___test.html", result);
@@ -31,10 +32,10 @@ namespace ZConsoleTests
             var mdDocAnim = converterAnim.MdDocument2Animated(mdDoc);
 
             File.WriteAllText($@"C:\Users\{userName}\Desktop\mdDoc.json", JsonConvert.SerializeObject(mdDoc, Formatting.Indented));
-            File.WriteAllText($@"C:\Users\{userName}\Desktop\mdDocAnim.json", JsonConvert.SerializeObject(mdDocAnim, Formatting.Indented));
+            //File.WriteAllText($@"C:\Users\{userName}\Desktop\mdDocAnim.json", JsonConvert.SerializeObject(mdDocAnim, Formatting.Indented));
 
-            //XmlFactory.WriteToFile(mdDoc, @"C:\Users\Mikhail\Desktop\mdDoc.xml");
-            //XmlFactory.WriteToFile(mdDoc, @"C:\Users\Mikhail\Desktop\mdDocAnim.xml");
+            XmlFactory.WriteToFile(mdDoc, @"C:\Users\Mikhail\Desktop\mdDoc.xml");
+            XmlFactory.WriteToFile(mdDocAnim, @"C:\Users\Mikhail\Desktop\mdDocAnim.xml");
         }
     }
 }

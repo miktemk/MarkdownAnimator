@@ -4,12 +4,19 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ignore="http://www.galasoft.ch/ignore"
+        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        xmlns:maBehaviors="clr-namespace:MarkdownAnimator.Views.Behaviors"
         mc:Ignorable="d ignore"
         Height="500"
         Width="700"
         Title="MVVM Light Application"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
-    
+
+    <Window.InputBindings>
+        <KeyBinding Gesture="Ctrl+B" Command="{Binding PlayStopCommand}"></KeyBinding>
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenFileCommand}"></KeyBinding>
+    </Window.InputBindings>
+
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -18,17 +25,20 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid x:Name="LayoutRoot">
-
-        <TextBlock FontSize="36"
-                   FontWeight="Bold"
-                   Foreground="Purple"
-                   Text="{Binding WelcomeTitle}"
-                   VerticalAlignment="Center"
-                   HorizontalAlignment="Center"
-                   TextWrapping="Wrap" />
-
-        <RichTextBox></RichTextBox>
-
-    </Grid>
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Bottom">
+            <Button DockPanel.Dock="Left" Command="{Binding PlayStopCommand}">Play</Button>
+            <Slider ></Slider>
+        </DockPanel>
+        <avalonEdit:TextEditor
+            FontFamily="Consolas"
+            FontSize="10pt"
+            Document="{Binding CodeDocument}"
+            IsEnabled="True"
+            IsReadOnly="False"
+            maBehaviors:AEBehaviors.HightlightTtsKeyPoints="{Binding CurKeyPoints}"
+            >
+        </avalonEdit:TextEditor>
+        <!--<RichTextBox FontFamily="Consolas" FontSize="10" ></RichTextBox>-->
+    </DockPanel>
 </Window>

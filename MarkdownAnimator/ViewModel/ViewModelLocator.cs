@@ -1,7 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
 using Microsoft.Practices.ServiceLocation;
-using MarkdownAnimator.Model;
+using Miktemk.TextToSpeech.Services;
 
 namespace MarkdownAnimator.ViewModel
 {
@@ -11,7 +11,7 @@ namespace MarkdownAnimator.ViewModel
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
 
-            SimpleIoc.Default.Register<IDataService, DataService>();
+            SimpleIoc.Default.Register<ITtsService, TtsService>();
             SimpleIoc.Default.Register<MainViewModel>();
         }
 
