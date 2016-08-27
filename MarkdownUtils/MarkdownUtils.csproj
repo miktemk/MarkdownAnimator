@@ -46,8 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\MdAnimatedConverter.cs" />
+    <Compile Include="Core\MdAnimatedEvent.cs" />
     <Compile Include="Core\MdBlockFlattener.cs" />
     <Compile Include="Core\MdDocumentConverter.cs" />
+    <Compile Include="Core\Mdmmsc.cs" />
     <Compile Include="MdAnimated\MdAnimatedDocument.cs" />
     <Compile Include="MdDoc\MdDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

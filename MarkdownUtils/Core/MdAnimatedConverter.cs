@@ -10,6 +10,7 @@ using CommonMark.Syntax;
 using MarkdownUtils.Properties;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Miktemk.TextToSpeech.Core;
 
 namespace MarkdownUtils.Core
 {
@@ -19,13 +20,15 @@ namespace MarkdownUtils.Core
 
         private readonly string[] NotesHeaders;
         private readonly MdBlockFlattener flattener;
-        private Regex regexMdHighlight;
+        private Regex regexMdHighlight, regexTtsOpen, regexTtsClose;
 
         public MdAnimatedConverter()
         {
             NotesHeaders = Settings.Default.NotesText.Split('|');
             flattener = new MdBlockFlattener();
             regexMdHighlight = new Regex("<md-highlight\\slines=\"(.*?)\".*\\/>");
+            regexTtsOpen = new Regex("<tts\\slang=\"(.*?)\".*>");
+            regexTtsClose = new Regex("<\\/tts>");
         }
 
         public MdAnimatedDocument MdDocument2Animated(MdDocument mdDoc)
@@ -37,7 +40,7 @@ namespace MarkdownUtils.Core
             if (h1Heading != null)
                 result.Title = StringifyBlockSimple(h1Heading);
 
-            var splitSections = mdDoc.Blocks.SplitEnumerableStartingWith(b => b.HeaderLevel > 0);
+            var splitSections = mdDoc.Blocks.SplitEnumerableStartingWith(b => b.HeaderLevel > 0, true);
             foreach (var blocksWithHeadings in splitSections)
             {
                 // .... separate into headings and blocks
@@ -62,6 +65,7 @@ namespace MarkdownUtils.Core
                 foreach (var pageParagraphs in splitCodes)
                 {
                     var code = "";
+                    // .... flatten blocks
                     var TtsFlatParagraphs = new List<IEnumerable<MdInlineFlat>>();
                     foreach (var para in pageParagraphs)
                     {
@@ -79,99 +83,87 @@ namespace MarkdownUtils.Core
                             //sbPageText.Append("\n");
                         }
                     }
+                    // .... 
                     var allTtsFlatTexts = TtsFlatParagraphs.SelectMany(x => x);
-                    var allTtsFlatTextsStrings = allTtsFlatTexts.Select(x => x.Text).ToArray();
+                    var eventizedTtsText = allTtsFlatTexts.ConsumeAsTokenChars(
+                        MdInlineFlat2Char,
+                        new Dictionary<string, Func<IEnumerable<MdInlineFlat>, IEnumerable<MdAnimatedEvent>>>
+                        {
+                            // .... https://regex101.com/r/lG0oP0/4
+                            { @"\[r?t(?:,r?t)*\]", MakeMdEventFromRawTokens },
+                            // .... https://regex101.com/r/cQ4tE4/1
+                            { @"\{a+\}", MakeMdEventFromTts },
+                            { @"t", blocks => blocks.Select(x => new MdAnimatedEvent(x.Text, new [] { new TtsKeyPoint(x.Text) })) },
+                            { @"h+", MakeMdEventsFromHighlightLines },
+                            { @"a", blocks => blocks.Select(x => new MdAnimatedEvent(x.Text)) },
+                        }
+                    );
+
+                    var builderTotal = new StringBuilder();
                     var keyPoints = new List<TtsKeyPoint>();
-                    //int curChar = 0;
-                    allTtsFlatTexts.EnumerateWithIndex3((before, me, after, index) =>
-                    {
-                        if (me.TagInline == InlineTag.Code)
+                    var ttsText = new MultiLanguageText();
+
+                    // .... join all flat texts into TTS multilang string and build keypoints where they occur in this sequence
+                    eventizedTtsText.EnumerateSublistsEndingWith(x => x.Lang != null,
+                        (beforeTTS, ttsEvent, index) =>
                         {
-                            //if (before != null && before.Text.EndsWith("[r") &&
-                            //    after != null && after.Text.StartsWith("]"))
-                            if (index >= 2 &&
-                                allTtsFlatTextsStrings[index - 2].Equals("[") &&
-                                allTtsFlatTextsStrings[index - 1].Equals("r") &&
-                                after != null && after.Text.StartsWith("]"))
+                            var builderUpToTts = new StringBuilder();
+                            foreach (var animEvent in beforeTTS)
                             {
-                                // .... [r`someregex(findthis)`] TODO: not sure about the format yet
-                                //curChar -= 2;
-                                keyPoints.Add(new TtsKeyPoint
+                                // .... handle key points
+                                if (animEvent.KeyPoints?.Any() ?? false)
                                 {
-                                    //AtWhatChar = curChar,
-                                    Token = allTtsFlatTextsStrings[index],
-                                    KeyPointType = MdKeyPointType.Regex,
-                                });
-                                // .... mark token and remove brackets
-                                allTtsFlatTextsStrings[index] = TtsKeypointChar.ToString();
-                                allTtsFlatTextsStrings[index - 1] = String.Empty;
-                                allTtsFlatTextsStrings[index - 2] = allTtsFlatTextsStrings[index - 1].TrimEndN(1);
-                                allTtsFlatTextsStrings[index + 1] = allTtsFlatTextsStrings[index + 1].TrimStartN(1);
+                                    foreach (var kp in animEvent.KeyPoints)
+                                    {
+                                        kp.AtWhatChar = builderTotal.Length; // .... where they occur in this sequence!
+                                        keyPoints.Add(kp);
+                                    }
+                                }
+                                // .... handle text
+                                if (animEvent.Text != null)
+                                {
+                                    builderUpToTts.Append(animEvent.Text);
+                                    builderTotal.Append(animEvent.Text);
+                                }
                             }
-                            else if (before != null && before.Text.EndsWith("[") &&
-                                after != null && after.Text.StartsWith("]"))
+                            if (builderUpToTts.Length > 0)
                             {
-                                // .... [`somecode`]
-                                //curChar -= 1;
-                                keyPoints.Add(new TtsKeyPoint
+                                ttsText.Phrases.Add(new UniLangPhrase
                                 {
-                                    //AtWhatChar = curChar,
-                                    Token = allTtsFlatTextsStrings[index],
-                                    KeyPointType = MdKeyPointType.String,
+                                    Lang = "en", //TODO: define default language
+                                    Text = builderUpToTts.ToString()
                                 });
-                                // .... mark token and remove brackets
-                                allTtsFlatTextsStrings[index] = TtsKeypointChar.ToString();
-                                allTtsFlatTextsStrings[index - 1] = allTtsFlatTextsStrings[index - 1].TrimEndN(1);
-                                allTtsFlatTextsStrings[index + 1] = allTtsFlatTextsStrings[index + 1].TrimStartN(1);
                             }
-                            else
+                            // .... handle other language segment
+                            if (ttsEvent != null)
                             {
-                                // .... `somecode` no square brackets, no regex, so just read this aloud
-                                keyPoints.Add(new TtsKeyPoint
+                                builderTotal.Append(ttsEvent.Text);
+                                ttsText.Phrases.Add(new UniLangPhrase
                                 {
-                                    //AtWhatChar = curChar,
-                                    Token = allTtsFlatTextsStrings[index],
-                                    KeyPointType = MdKeyPointType.String,
+                                    Lang = ttsEvent.Lang,
+                                    Text = ttsEvent.Text,
                                 });
-                                // .... mark token
-                                allTtsFlatTextsStrings[index] = TtsKeypointChar + allTtsFlatTextsStrings[index];
                             }
-                        }
-                        else if (me.TagInline == InlineTag.RawHtml)
-                        {
-                            var raw = allTtsFlatTextsStrings[index];
-                            allTtsFlatTextsStrings[index] = string.Empty;
-                            if (regexMdHighlight.IsMatch(raw))
-                            {
-                                var moHighlight = regexMdHighlight.Match(raw);
-                                keyPoints.Add(new TtsKeyPoint
-                                {
-                                    //AtWhatChar = curChar,
-                                    Token = moHighlight.Groups[1].Value,
-                                    KeyPointType = MdKeyPointType.HighlightLines,
-                                });
-                                // .... mark token
-                                allTtsFlatTextsStrings[index] = TtsKeypointChar.ToString();
-                            }
-                        }
-                        //curChar += allTtsFlatTextsStrings[index].Length + 1; // +1 for space! see Join below
-                        //Debug.WriteLine(before != null ? before.Text : "");
-                        //Debug.WriteLine(me.Text);
-                        //Debug.WriteLine(after != null ? after.Text : "");
-                        //Debug.WriteLine("--------------------");
-                    });
-                    // .... join all flat texts to one string
-                    var allTtsText = String.Join(" ", allTtsFlatTextsStrings);
-                    // .... remove excess whitespace and use TtsKeypointChar to establish AtWhatChar for each aquired keypoint
-                    //allTtsText = 
+                        });
+
+                    // .... Old approach: remove excess whitespace and use TtsKeypointChar to establish AtWhatChar for each aquired keypoint
+                    //var allTtsText = String.Join(" ", allTtsFlatTextsStrings);
+                    //allTtsText = allTtsText
+                    //    .ClusterChar(TtsKeypointChar, new[] { ' ' }, true)
+                    //    .Trim()
+                    //    .MakeCharUnique(' ')
+                    //    .TransformWithCallback(
+                    //        new[] {
+                    //            new CharAndCallback(TtsKeypointChar, (charIndex, index) => {
+                    //                keyPoints[index].AtWhatChar = charIndex;
+                    //            }),
+                    //        });
                     var newPage = new MdAnimatedBlock
                     {
                         Code = code,
-                        TtsContent = new TtsContentWithKeyPoints
-                        {
-                            TtsText = allTtsText,
-                            KeyPoints = keyPoints,
-                        }
+                        TtsTextString = builderTotal.ToString(),
+                        KeyPoints = keyPoints,
+                        TtsText = ttsText,
                     };
                     newSection.Pages.Add(newPage);
                 }
@@ -181,6 +173,77 @@ namespace MarkdownUtils.Core
             return result;
         }
 
+        /// <summary>
+        /// example rawTokens: {aa}
+        /// </summary>
+        private IEnumerable<MdAnimatedEvent> MakeMdEventFromTts(IEnumerable<MdInlineFlat> rawTokens)
+        {
+            var moTtsOpen = regexTtsOpen.Match(rawTokens.FirstOrDefault().Text);
+            var lang = moTtsOpen.Groups[1].Value;
+            var contentStr = rawTokens
+                .Skip(1).DropLast()
+                .Select(x => x.Text)
+                .StringJoin(" ");
+            return new[] { new MdAnimatedEvent(contentStr) { Lang = lang } };
+        }
+
+        /// <summary>
+        /// example rawTokens: [t,rt,t,rt]
+        /// </summary>
+        private IEnumerable<MdAnimatedEvent> MakeMdEventFromRawTokens(IEnumerable<MdInlineFlat> rawTokens)
+        {
+            var keyPoints = rawTokens.ConsumeAsTokenChars(
+                MdInlineFlat2Char,
+                new Dictionary<string, Func<IEnumerable<MdInlineFlat>, IEnumerable<TtsKeyPoint>>>
+                {
+                    { @"rt", blocks => new [] { new TtsKeyPoint(blocks.Skip(1).FirstOrDefault().Text, MdKeyPointType.Regex) } },
+                    { @"t",  blocks => new [] { new TtsKeyPoint(blocks.FirstOrDefault().Text, MdKeyPointType.String) } },
+                }
+            );
+            return new[] { new MdAnimatedEvent("", keyPoints) };
+        }
+
+        /// <summary>
+        /// example rawTokens: hhh
+        /// </summary>
+        private IEnumerable<MdAnimatedEvent> MakeMdEventsFromHighlightLines(IEnumerable<MdInlineFlat> rawTokens)
+        {
+            var keyPoints = rawTokens.Select(token =>
+            {
+                var moMdHighlight = regexMdHighlight.Match(token.Text);
+                return new TtsKeyPoint
+                {
+                    Token = moMdHighlight.Groups[1].Value,
+                    KeyPointType = MdKeyPointType.HighlightLines,
+                };
+            });
+            return new[] { new MdAnimatedEvent("", keyPoints) };
+        }
+
+        /// <summary>
+        /// example output: aa[rt]a[rt,t]aa[t,rt,t,rt]aaaaahaha{a}
+        /// </summary>
+        private char MdInlineFlat2Char(MdInlineFlat x)
+        {
+            if (x.Text == "[") return '[';
+            if (x.Text == "]") return ']';
+            if (x.Text == "r") return 'r';
+            if (x.TagInline == InlineTag.Code) return 't';
+            if (x.TagInline == InlineTag.RawHtml)
+            {
+                if (IsMdHighlight(x)) return 'h';
+                if (IsTtsOpen(x)) return '{';
+                if (IsTtsClose(x)) return '}';
+            }
+            if (IsComma(x)) return ',';
+            return 'a';
+        }
+
+        private bool IsComma(MdInlineFlat x) { return x.Text.Trim() == ","; }
+        private bool IsMdHighlight(MdInlineFlat x) { return regexMdHighlight.IsMatch(x.Text); }
+        private bool IsTtsOpen(MdInlineFlat x) { return regexTtsOpen.IsMatch(x.Text); }
+        private bool IsTtsClose(MdInlineFlat x) { return regexTtsClose.IsMatch(x.Text); }
+
         private string StringifyBlockSimple(MdBlock block)
         {
             return String.Join(" ", flattener.FlattenBlock(block).Select(x => x.Text));
@@ -189,7 +252,7 @@ namespace MarkdownUtils.Core
         private IEnumerable<IEnumerable<MdBlock>> SplitMdSectionsIntoCodeBlocksNotesConsidered(IEnumerable<MdBlock> sectionBlocks)
         {
             var codeSplit = sectionBlocks
-                .SplitEnumerableEndingWith(b => IsCodeBlock(b))
+                .SplitEnumerableEndingWith(b => IsCodeBlock(b), true)
                 .ToArray();
             codeSplit.EnumerateWithIndex((codeBlock, index) =>
             {
@@ -202,7 +265,7 @@ namespace MarkdownUtils.Core
                     //var oopsTheseBelongToPrev = codeBlock.Take(2); // .... do not skip "Notes:"
                     var oopsTheseBelongToPrev = codeBlock.Skip(1).Take(1); // .... skip "Notes:"
                     codeSplit[index] = codeSplit[index].Skip(2);
-                    codeSplit[index-1] = codeSplit[index-1].Union(oopsTheseBelongToPrev).ToArray();
+                    codeSplit[index - 1] = codeSplit[index - 1].Union(oopsTheseBelongToPrev).ToArray();
                 }
             });
             return codeSplit.Where(x => x.Any()); // .... remove empty entries

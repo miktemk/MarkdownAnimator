@@ -20,7 +20,7 @@ namespace ZConsoleTests
             //const string userName = "miktemk";
             const string userName = "Mikhail";
 
-            var mdText = File.ReadAllText($@"C:\Users\{userName}\Google Drive\md-notes\js-regex.md");
+            var mdText = File.ReadAllText($@"C:\Users\{userName}\Google Drive\md-notes\mdanim-sample.md");
             var doc = CommonMarkConverter.Parse(mdText);
             //var result = CommonMarkConverter.Convert(mdText);
             //File.WriteAllText(@"C:\Users\Mikhail\Desktop\___test.html", result);

@@ -1,4 +1,6 @@
-﻿using CommonMark;
+﻿#define TMP_TEST
+
+using CommonMark;
 using GalaSoft.MvvmLight;
 using MarkdownUtils.Core;
 using Miktemk.TextToSpeech.Services;
@@ -11,112 +13,86 @@ using GalaSoft.MvvmLight.Command;
 using System.Diagnostics;
 using ICSharpCode.AvalonEdit.Document;
 using System.Collections.Generic;
+using PropertyChanged;
+using Miktemk;
+using MarkdownAnimator.Code;
+using System.Windows;
+using MarkdownAnimator.Properties;
 
 namespace MarkdownAnimator.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-        private ITtsService ttsService;
-        private readonly Stack<TtsKeyPoint> curPageKeyPoints = new Stack<TtsKeyPoint>();
-
-        public ICommand PlayStopCommand { get; }
-        public ICommand OpenFileCommand { get; }
 
         public MdDocumentEnumerator DocPager { get; private set; }
-        public IEnumerable<TtsKeyPoint> CurKeyPoints { get; private set; }
+        public MdDocumentTtsReader DocReader { get; private set; }
+
+        // bindables
+        public bool IsSidebarVisible { get; private set; } = true;
         public TextDocument CodeDocument { get; } = new TextDocument();
+        public IEnumerable<TtsKeyPoint> CurKeyPoints { get; private set; }
+
+        // commands
+        public ICommand PlayStopCommand { get; }
+        public ICommand OpenFileCommand { get; }
+        public ICommand ToggleSidebarCollapseCommand { get; }
 
         public MainViewModel(ITtsService ttsService)
         {
-            this.ttsService = ttsService;
-
             // .... commands
             PlayStopCommand = new RelayCommand(PlayStop);
             OpenFileCommand = new RelayCommand(OpenFile);
+            ToggleSidebarCollapseCommand = new RelayCommand(() => { IsSidebarVisible = !IsSidebarVisible; });
+
+            DocReader = new MdDocumentTtsReader(() => DocPager, ttsService);
 
             // DEBUG .... load from command line argument
+#if TMP_TEST
+            //LoadFile(@"C:\Users\Mikhail\Google Drive\md-notes\mdanim-sample.md");
+            LoadFile(@"C:\Users\Mikhail\Google Drive\md-notes\mdanim-csharp.md");
+#else
             var argFileToLoad = Environment.GetCommandLineArgs().Skip(1).FirstOrDefault();
             if (argFileToLoad != null)
                 LoadFile(argFileToLoad);
+#endif
         }
 
         private void OpenFile()
         {
-
+            //TODO: open file dialog
         }
 
         private void LoadFile(string filename)
         {
-            var converter = new MdDocumentConverter();
-            var converterAnim = new MdAnimatedConverter();
+            DocReader.Stop();
 
-            var mdText = File.ReadAllText(filename);
-            var doc = CommonMarkConverter.Parse(mdText);
-            var mdDoc = converter.CommonMark2MdDocument(doc);
-            var mdDocAnim = converterAnim.MdDocument2Animated(mdDoc);
+            MdAnimatedDocument mdDocAnim = Utils.LoadMdDocAnim(filename);
+
+            UtilsRegistry.OpenUserSoftwareKey(Settings.Default.RegRoot);
 
             DocPager = new MdDocumentEnumerator(mdDocAnim);
-
-            ttsService.AddWordCallback(wordCallback);
+            DocPager.PageChanged += DocPager_PageChanged;
+            DocPager.UpdateCurKeyPoints += DocPager_UpdateCurKeyPoints;
+            DocPager.ResetToBeginning();
         }
 
         private void PlayStop()
         {
-            if (ttsService.IsPlaying)
-            {
-                ttsService.StopCurrentSynth();
-                return;
-            }
-            SayCurPage();
+            if (DocReader != null)
+                DocReader.PlayStop();
         }
 
-        private void SayCurPage()
+        private void DocPager_PageChanged()
         {
-            var curPage = DocPager.CurPage;
-            if (curPage == null)
-                return;
-
-            CodeDocument.Text = curPage.Code;
-            CurKeyPoints = null;
-
-            curPageKeyPoints.Clear();
-            foreach (var keyEvent in curPage.TtsContent.KeyPoints.OrderByDescending(x => x.AtWhatChar))
-                curPageKeyPoints.Push(keyEvent);
-
-            Debug.WriteLine("========== page ============");
-            Debug.WriteLine($"new-code: {curPage.Code}");
-            Debug.WriteLine($"saying: {curPage.TtsContent.TtsText}");
-            ttsService.SayAsync("en", curPage.TtsContent.TtsText, () =>
-            {
-                GoToNextPage();
-            });
+            CodeDocument.Text = (DocPager.CurPage == null)
+                ? string.Empty
+                : DocPager.CurPage.Code;
         }
 
-        private void GoToNextPage()
+        private void DocPager_UpdateCurKeyPoints(IEnumerable<TtsKeyPoint> keypoints)
         {
-            var backToStart = DocPager.GoToNextPage();
-            if (!backToStart)
-                SayCurPage();
+            CurKeyPoints = keypoints;
         }
 
-        private void wordCallback(string str, int index, int len)
-        {
-            if (!curPageKeyPoints.Any())
-                return;
-            var listPoppedKPs = new List<TtsKeyPoint>();
-            while (curPageKeyPoints.Any() && curPageKeyPoints.Peek() != null && index >= curPageKeyPoints.Peek().AtWhatChar)
-            {
-                var kp = curPageKeyPoints.Pop();
-                listPoppedKPs.Add(kp);
-            }
-            CurKeyPoints = listPoppedKPs.ToArray();
-
-            foreach (var kp in CurKeyPoints)
-            {
-                Debug.WriteLine("------- keypoints -----------");
-                Debug.WriteLine(kp.KeyPointType);
-                Debug.WriteLine(kp.Token);
-            }
-        }
     }
 }

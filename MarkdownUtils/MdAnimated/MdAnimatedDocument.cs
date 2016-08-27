@@ -21,24 +21,31 @@ namespace MarkdownUtils.MdAnimated
     public class MdAnimatedBlock
     {
         public string Code { get; set; }
-        public TtsContentWithKeyPoints TtsContent { get; set; }
+        public MultiLanguageText TtsText { get; set; }
+        public string TtsTextString { get; set; }
+        public List<TtsKeyPoint> KeyPoints { get; set; }
 
         public MdAnimatedBlock()
         {
-            TtsContent = new TtsContentWithKeyPoints();
+            TtsText = new MultiLanguageText();
+            KeyPoints = new List<TtsKeyPoint>();
         }
-    }
-    public class TtsContentWithKeyPoints
-    {
-        //public MultiLanguageText TtsText { get; set; }
-        public string TtsText { get; set; }
-        public List<TtsKeyPoint> KeyPoints { get; set; }
     }
     public class TtsKeyPoint
     {
         public int AtWhatChar { get; set; }
         public string Token { get; set; } // TODO: more ways to identifu tokens
         public MdKeyPointType KeyPointType { get; set; }
+
+        public TtsKeyPoint() { }
+        public TtsKeyPoint(string token)
+            : this(token, MdKeyPointType.String)
+        { }
+        public TtsKeyPoint(string token, MdKeyPointType keyPointType)
+        {
+            Token = token;
+            KeyPointType = keyPointType;
+        }
     }
     public enum MdKeyPointType
     {

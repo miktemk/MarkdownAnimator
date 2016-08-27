@@ -1,0 +1,15 @@
+﻿a: <mdmm sc="explained" />
+b: <tts lang="ru">как было более чем доходчиво объяснено ранее</tts>
+b: <tts lang="ru">как было более чем доходчиво объяснено ранее, соня</tts>
+b: <tts lang="ru">как мы объяснили ранее, если кто-то слушал.</tts>
+a: <mdmm sc="nowords" />
+b: <tts lang="ru">язык не поворачивается по-другому это назвать</tts>
+a: <mdmm sc="ff" />
+b: Fuck that!
+b: <tts lang="ru">Заебали, блять!</tts>
+a: <mdmm sc="fff" />
+b: Fuck off!
+b: <tts lang="ru">Иди в жопу!</tts>
+a: <mdmm sc="now..." />
+b: Now that we've done all that,
+b: <tts lang="ru">И теперь, дамы и господа,</tts>
