@@ -20,7 +20,7 @@ namespace MarkdownUtils.Core
 
         private readonly string[] NotesHeaders;
         private readonly MdBlockFlattener flattener;
-        private Regex regexMdHighlight, regexTtsOpen, regexTtsClose;
+        private Regex regexMdHighlight, regexTtsOpen, regexTtsClose, regexCommaR;
 
         public MdAnimatedConverter()
         {
@@ -29,6 +29,7 @@ namespace MarkdownUtils.Core
             regexMdHighlight = new Regex("<md-highlight\\slines=\"(.*?)\".*\\/>");
             regexTtsOpen = new Regex("<tts\\slang=\"(.*?)\".*>");
             regexTtsClose = new Regex("<\\/tts>");
+            regexCommaR = new Regex(",.*r");
         }
 
         public MdAnimatedDocument MdDocument2Animated(MdDocument mdDoc)
@@ -85,7 +86,16 @@ namespace MarkdownUtils.Core
                     }
                     // .... 
                     var allTtsFlatTexts = TtsFlatParagraphs.SelectMany(x => x);
-                    var eventizedTtsText = allTtsFlatTexts.ConsumeAsTokenChars(
+                    // .... break ',r' into 2 MdInlineFlat: ',' and 'r', otherwise it messes up the https://regex101.com/r/lG0oP0/4 regexing
+                    var allTtsFlatTextsSplitCommaR = allTtsFlatTexts.CustomManipulation(
+                        new Dictionary<Func<MdInlineFlat,bool>, Func<IEnumerable<MdInlineFlat>>>
+                        {
+                            { x => IsCommaR(x), () => new [] {
+                                new MdInlineFlat(",", InlineTag.String),
+                                new MdInlineFlat("r", InlineTag.String)
+                            } }
+                        });
+                    var eventizedTtsText = allTtsFlatTextsSplitCommaR.ConsumeAsTokenChars(
                         MdInlineFlat2Char,
                         new Dictionary<string, Func<IEnumerable<MdInlineFlat>, IEnumerable<MdAnimatedEvent>>>
                         {
@@ -236,6 +246,7 @@ namespace MarkdownUtils.Core
                 if (IsTtsClose(x)) return '}';
             }
             if (IsComma(x)) return ',';
+            if (IsCommaR(x)) return ';';
             return 'a';
         }
 
@@ -243,6 +254,7 @@ namespace MarkdownUtils.Core
         private bool IsMdHighlight(MdInlineFlat x) { return regexMdHighlight.IsMatch(x.Text); }
         private bool IsTtsOpen(MdInlineFlat x) { return regexTtsOpen.IsMatch(x.Text); }
         private bool IsTtsClose(MdInlineFlat x) { return regexTtsClose.IsMatch(x.Text); }
+        private bool IsCommaR(MdInlineFlat x) { return regexCommaR.IsMatch(x.Text); }
 
         private string StringifyBlockSimple(MdBlock block)
         {

@@ -1,4 +1,4 @@
-﻿#define TMP_TEST
+﻿//#define TMP_TEST
 
 using CommonMark;
 using GalaSoft.MvvmLight;

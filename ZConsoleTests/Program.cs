@@ -17,9 +17,14 @@ namespace ZConsoleTests
     {
         static void Main(string[] args)
         {
-            //const string userName = "miktemk";
-            const string userName = "Mikhail";
+            new Program();
+        }
 
+        const string userName = "miktemk";
+        //const string userName = "Mikhail";
+
+        public Program()
+        {
             var mdText = File.ReadAllText($@"C:\Users\{userName}\Google Drive\md-notes\mdanim-sample.md");
             var doc = CommonMarkConverter.Parse(mdText);
             //var result = CommonMarkConverter.Convert(mdText);
@@ -31,11 +36,16 @@ namespace ZConsoleTests
             var converterAnim = new MdAnimatedConverter();
             var mdDocAnim = converterAnim.MdDocument2Animated(mdDoc);
 
-            File.WriteAllText($@"C:\Users\{userName}\Desktop\mdDoc.json", JsonConvert.SerializeObject(mdDoc, Formatting.Indented));
+            File.WriteAllText(OnDesktop("mdDoc.json"), JsonConvert.SerializeObject(mdDoc, Formatting.Indented));
             //File.WriteAllText($@"C:\Users\{userName}\Desktop\mdDocAnim.json", JsonConvert.SerializeObject(mdDocAnim, Formatting.Indented));
 
-            XmlFactory.WriteToFile(mdDoc, @"C:\Users\Mikhail\Desktop\mdDoc.xml");
-            XmlFactory.WriteToFile(mdDocAnim, @"C:\Users\Mikhail\Desktop\mdDocAnim.xml");
+            XmlFactory.WriteToFile(mdDoc, OnDesktop("mdDoc.xml"));
+            XmlFactory.WriteToFile(mdDocAnim, OnDesktop("mdDocAnim.xml"));
+        }
+
+        private string OnDesktop(string filename)
+        {
+            return Path.Combine($@"C:\Users\{userName}\Desktop", filename);
         }
     }
 }
