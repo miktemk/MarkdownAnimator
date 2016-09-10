@@ -93,9 +93,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Code\ConverterBool2GridColumn.cs" />
-    <Compile Include="Code\BoolToVisibilityConverter2.cs" />
     <Compile Include="Code\Utils.cs" />
+    <Compile Include="Services\RegistryService.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\MdDocumentTtsReader.cs" />
     <Compile Include="ViewModel\MdDocumentEnumerator.cs" />

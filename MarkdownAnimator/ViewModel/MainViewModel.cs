@@ -18,11 +18,15 @@ using Miktemk;
 using MarkdownAnimator.Code;
 using System.Windows;
 using MarkdownAnimator.Properties;
+using MarkdownAnimator.Services;
+using Miktemk.Winforms.ViewModels;
 
 namespace MarkdownAnimator.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
+        private ITtsService ttsService;
+        private IRegistryService registryService;
 
         public MdDocumentEnumerator DocPager { get; private set; }
         public MdDocumentTtsReader DocReader { get; private set; }
@@ -31,14 +35,22 @@ namespace MarkdownAnimator.ViewModel
         public bool IsSidebarVisible { get; private set; } = true;
         public TextDocument CodeDocument { get; } = new TextDocument();
         public IEnumerable<TtsKeyPoint> CurKeyPoints { get; private set; }
-
+        public SublimeStyleFoldersVM SidebarFolders { get; private set; }
+        
         // commands
         public ICommand PlayStopCommand { get; }
         public ICommand OpenFileCommand { get; }
         public ICommand ToggleSidebarCollapseCommand { get; }
 
-        public MainViewModel(ITtsService ttsService)
+        public MainViewModel(ITtsService ttsService, IRegistryService registryService)
         {
+            // .... services
+            this.ttsService = ttsService;
+            this.registryService = registryService;
+
+            // .... view models
+            SidebarFolders = registryService.SidebarFolders;
+
             // .... commands
             PlayStopCommand = new RelayCommand(PlayStop);
             OpenFileCommand = new RelayCommand(OpenFile);
