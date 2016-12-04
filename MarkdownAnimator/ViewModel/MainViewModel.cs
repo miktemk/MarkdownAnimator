@@ -18,80 +18,49 @@ using Miktemk;
 using MarkdownAnimator.Code;
 using System.Windows;
 using MarkdownAnimator.Properties;
-using MarkdownAnimator.Services;
-using Miktemk.Winforms.ViewModels;
+using Miktemk.Wpf.ViewModels;
+using Miktemk.Wpf.Services;
+using Miktemk.TextToSpeech.Wpf.ViewModels;
+using MvvmDialogs;
+using Miktemk.Wpf.Controls;
 
 namespace MarkdownAnimator.ViewModel
 {
-    public class MainViewModel : ViewModelBase
+    public class MainViewModel : MainViewModelTts
     {
-        private ITtsService ttsService;
-        private IRegistryService registryService;
-
         public MdDocumentEnumerator DocPager { get; private set; }
-        public MdDocumentTtsReader DocReader { get; private set; }
+        private MdDocumentTtsReader _DocReader;
+        public MdDocumentTtsReader DocReader => _DocReader ?? (_DocReader = new MdDocumentTtsReader(() => DocPager, ttsService));
 
         // bindables
-        public bool IsSidebarVisible { get; private set; } = true;
         public TextDocument CodeDocument { get; } = new TextDocument();
         public IEnumerable<TtsKeyPoint> CurKeyPoints { get; private set; }
-        public SublimeStyleFoldersVM SidebarFolders { get; private set; }
-        
-        // commands
-        public ICommand PlayStopCommand { get; }
-        public ICommand OpenFileCommand { get; }
-        public ICommand ToggleSidebarCollapseCommand { get; }
 
-        public MainViewModel(ITtsService ttsService, IRegistryService registryService)
+        public MainViewModel(
+            ITtsService ttsService,
+            IRegistryService registryService,
+            IDialogService dialogService)
+            : base(ttsService, registryService, dialogService)
         {
-            // .... services
-            this.ttsService = ttsService;
-            this.registryService = registryService;
-
-            // .... view models
-            SidebarFolders = registryService.SidebarFolders;
-
-            // .... commands
-            PlayStopCommand = new RelayCommand(PlayStop);
-            OpenFileCommand = new RelayCommand(OpenFile);
-            ToggleSidebarCollapseCommand = new RelayCommand(() => { IsSidebarVisible = !IsSidebarVisible; });
-
-            DocReader = new MdDocumentTtsReader(() => DocPager, ttsService);
-
-            // DEBUG .... load from command line argument
-#if TMP_TEST
-            //LoadFile(@"C:\Users\Mikhail\Google Drive\md-notes\mdanim-sample.md");
-            LoadFile(@"C:\Users\Mikhail\Google Drive\md-notes\mdanim-csharp.md");
-#else
-            var argFileToLoad = Environment.GetCommandLineArgs().Skip(1).FirstOrDefault();
-            if (argFileToLoad != null)
-                LoadFile(argFileToLoad);
-#endif
+            ttsService.SetVoiceOverrideSpeedDefaultOnly(TtsSpeed);
         }
 
-        private void OpenFile()
+        protected override void PlayPause(PlayPauseButton.PlayState state)
         {
-            //TODO: open file dialog
+            if (DocReader != null)
+                DocReader.PlayStop();
         }
 
-        private void LoadFile(string filename)
+        protected override void LoadFile(string filename)
         {
             DocReader.Stop();
 
             MdAnimatedDocument mdDocAnim = Utils.LoadMdDocAnim(filename);
 
-            UtilsRegistry.OpenUserSoftwareKey(Settings.Default.RegRoot);
-
             DocPager = new MdDocumentEnumerator(mdDocAnim);
             DocPager.PageChanged += DocPager_PageChanged;
             DocPager.UpdateCurKeyPoints += DocPager_UpdateCurKeyPoints;
             DocPager.ResetToBeginning();
-        }
-
-        private void PlayStop()
-        {
-            if (DocReader != null)
-                DocReader.PlayStop();
         }
 
         private void DocPager_PageChanged()
@@ -105,6 +74,5 @@ namespace MarkdownAnimator.ViewModel
         {
             CurKeyPoints = keypoints;
         }
-
     }
 }

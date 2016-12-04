@@ -43,12 +43,16 @@ namespace MarkdownAnimator.ViewModel
             ttsService.StopCurrentSynth();
         }
 
+        public void SetSpeed(int speed)
+        {
+            ttsService.SetVoiceOverrideSpeed(speed);
+        }
+
         private void SayCurPage()
         {
             var docPager = funcGetDocPager();
             if (docPager.CurPage == null)
                 return;
-            ttsService.SetVoiceOverrideSpeed(5);
             ttsService.SayAsyncMany(docPager.CurPage.TtsText, 0, (phrase, index) =>
             {
                 if (index > 0)

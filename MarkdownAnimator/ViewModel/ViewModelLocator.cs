@@ -1,8 +1,8 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
-using MarkdownAnimator.Services;
 using Microsoft.Practices.ServiceLocation;
 using Miktemk.TextToSpeech.Services;
+using Miktemk.Wpf.Services;
 
 namespace MarkdownAnimator.ViewModel
 {
@@ -12,21 +12,16 @@ namespace MarkdownAnimator.ViewModel
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
 
-            SimpleIoc.Default.Register<ITtsService, TtsService>();
-            SimpleIoc.Default.Register<IRegistryService, RegistryService>();
-            SimpleIoc.Default.Register<MainViewModel>();
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance",
-            "CA1822:MarkMembersAsStatic",
-            Justification = "This non-static member is needed for data binding purposes.")]
-        public MainViewModel Main
-        {
-            get
+            if (!ViewModelBase.IsInDesignModeStatic)
             {
-                return ServiceLocator.Current.GetInstance<MainViewModel>();
+                SimpleIoc.Default.Register<MvvmDialogs.IDialogService>(() => new MvvmDialogs.DialogService());
+                SimpleIoc.Default.Register<ITtsService, TtsService>();
+                SimpleIoc.Default.Register<IRegistryService, RegistryService>();
+                SimpleIoc.Default.Register<MainViewModel>();
             }
         }
+
+        public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
 
         public static void Cleanup()
         {

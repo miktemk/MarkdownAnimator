@@ -8,10 +8,13 @@ using System.Threading.Tasks;
 using MarkdownUtils.MdAnimated;
 using MarkdownUtils.Core;
 using CommonMark;
+using Microsoft.Win32;
+using Newtonsoft.Json;
+using System.Xml.Serialization;
 
 namespace MarkdownAnimator.Code
 {
-    public class Utils
+    public static class Utils
     {
         public static string GetFileFromThisAppDirectory(string subpath)
         {
@@ -32,5 +35,6 @@ namespace MarkdownAnimator.Code
 
             return mdDocAnim;
         }
+
     }
 }

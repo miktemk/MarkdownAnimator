@@ -22,14 +22,5 @@ namespace MarkdownAnimator.Properties {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("miktemk\\MarkdownAnimator")]
-        public string RegRoot {
-            get {
-                return ((string)(this["RegRoot"]));
-            }
-        }
     }
 }

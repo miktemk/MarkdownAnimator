@@ -129,6 +129,7 @@ namespace MarkdownAnimator.ViewModel
             }
             set
             {
+                // TODO: navigation is broken!
                 IndexGlobal = (int)value;
             }
         }

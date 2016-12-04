@@ -7,8 +7,8 @@
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:maBehaviors="clr-namespace:MarkdownAnimator.Views.Behaviors"
         xmlns:maCode="clr-namespace:MarkdownAnimator.Code"
-        xmlns:maViews="clr-namespace:MarkdownAnimator.Views"
-        xmlns:mikWpfControls="clr-namespace:Miktemk.Winforms.WpfControls;assembly=Miktemk.Winforms"
+        xmlns:mikWpfControls="clr-namespace:Miktemk.Wpf.Controls;assembly=Miktemk.Wpf"
+        xmlns:mikWpfConverters="clr-namespace:Miktemk.Wpf.Core.Converters;assembly=Miktemk.Wpf"
         mc:Ignorable="d ignore"
         Height="500"
         Width="900"
@@ -23,36 +23,8 @@
     </Window.InputBindings>
 
     <Window.Resources>
-        <maCode:ConverterBool2Vis2 x:Key="BoolToVis2"/>
-        <maCode:ConverterBool2GridColumn x:Key="Bool2GridColumn"/>
-        
-        <BitmapImage x:Key="PlayIconBI" UriSource="Content/Images/play128.png" />
-        <Image x:Key="PlayIcon" Source="{StaticResource PlayIconBI}"></Image>
-        <BitmapImage x:Key="PlayIconBlueBI" UriSource="Content/Images/play128-blue.png" />
-        <Image x:Key="PlayIconBlue" Source="{StaticResource PlayIconBlueBI}"></Image>
-        <BitmapImage x:Key="PauseIconBI" UriSource="Content/Images/pause128.png" />
-        <Image x:Key="PauseIcon" Source="{StaticResource PauseIconBI}"></Image>
-
-        <Style x:Key="TransparentStyle" TargetType="{x:Type Button}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Name="border" Background="Transparent">
-                            <ContentPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" TargetName="border">
-                                    <Setter.Value>
-                                        <ImageBrush ImageSource="{StaticResource PlayIconBlueBI}" />
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <mikWpfConverters:ConverterBool2Vis2 x:Key="BoolToVis2"/>
+        <mikWpfConverters:ConverterBool2GridColumn x:Key="Bool2GridColumn"/>
     </Window.Resources>
 
     <Grid>
@@ -61,58 +33,48 @@
             <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
-        <mikWpfControls:SublimeStyleFolders>
-            <!--Visibility="{Binding sidebarVisible, Converter={StaticResource BoolToVis2}}"-->
-            
+        <mikWpfControls:SublimeStyleFolders
+            SublimeFolders="{Binding SidebarFolders}"
+            Visibility="{Binding sidebarVisible, Converter={StaticResource BoolToVis2}}"
+            SelectedLeaf="{Binding SelectedPath}">
         </mikWpfControls:SublimeStyleFolders>
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
         <DockPanel Grid.Column="2">
             <DockPanel DockPanel.Dock="Bottom">
-                <Button DockPanel.Dock="Left"
-                    Command="{Binding PlayStopCommand}"
-                    Style="{StaticResource TransparentStyle}"
-                    VerticalAlignment="Center">
-                    <Button.Template>
-                        <ControlTemplate TargetType="{x:Type Button}">
-                            <Grid>
-                                <!--<Ellipse Stroke="Black" />-->
-                                <Image
-                                Source="{StaticResource PlayIconBI}"
-                                Width="40" Height="40"
-                                Visibility="{Binding Path=DocReader.IsPlaying, Converter={StaticResource BoolToVis2}, ConverterParameter={x:Static Visibility.Hidden}}" />
-                                <Image
-                                Source="{StaticResource PauseIconBI}"
-                                Width="40" Height="40"
-                                Visibility="{Binding Path=DocReader.IsPlaying, Converter={StaticResource BoolToVis2}, ConverterParameter={x:Static Visibility.Visible}}" />
-                            </Grid>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
+                <WrapPanel>
+                    <mikWpfControls:PlayPauseButton PlayPauseCommand="{Binding PlayPauseCommand}" ></mikWpfControls:PlayPauseButton>
+                    <StackPanel VerticalAlignment="Center">
+                        <ComboBox
+                            ItemsSource="{Binding TtsSpeedChoices}"
+                            SelectedItem="{Binding TtsSpeed}">
+                        </ComboBox>
+                    </StackPanel>
+                </WrapPanel>
                 <TextBlock
-                DockPanel.Dock="Right"
-                FontSize="20"
-                VerticalAlignment="Center"
-                Margin="0,0,10,0"
-                Text="{Binding Path=DocPager.ProgressLabel}"
+                    DockPanel.Dock="Right"
+                    FontSize="20"
+                    VerticalAlignment="Center"
+                    Margin="0,0,10,0"
+                    Text="{Binding Path=DocPager.ProgressLabel}"
                 ></TextBlock>
                 <Slider
-                VerticalAlignment="Center"
-                Value="{Binding Path=DocPager.GlobalProgress, Mode=TwoWay}"
-                Minimum="0"
-                Maximum="{Binding Path=DocPager.TotalPages}"
-                TickPlacement="BottomRight"
-                TickFrequency="1"
-                Foreground="Black"
-                Margin="10,0,10,0"
+                    VerticalAlignment="Center"
+                    Value="{Binding Path=DocPager.GlobalProgress, Mode=TwoWay}"
+                    Minimum="0"
+                    Maximum="{Binding Path=DocPager.TotalPages}"
+                    TickPlacement="BottomRight"
+                    TickFrequency="1"
+                    Foreground="Black"
+                    Margin="10,0,10,0"
                 ></Slider>
             </DockPanel>
             <avalonEdit:TextEditor
-            FontFamily="Consolas"
-            FontSize="10pt"
-            Document="{Binding CodeDocument}"
-            IsEnabled="True"
-            IsReadOnly="False"
-            maBehaviors:AEBehaviors.HightlightTtsKeyPoints="{Binding CurKeyPoints}"
+                FontFamily="Consolas"
+                FontSize="10pt"
+                Document="{Binding CodeDocument}"
+                IsEnabled="True"
+                IsReadOnly="False"
+                maBehaviors:AEBehaviors.HightlightTtsKeyPoints="{Binding CurKeyPoints}"
             >
             </avalonEdit:TextEditor>
             <!--<RichTextBox FontFamily="Consolas" FontSize="10" ></RichTextBox>-->
