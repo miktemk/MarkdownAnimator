@@ -46,13 +46,12 @@ namespace MarkdownAnimator.ViewModel
 
         private MdAnimatedBlock MakeTitlePage(MdAnimatedDocumentSection s)
         {
+            var ttsText = new MultiLangStringPhrased();
+            ttsText.AddPhrase(s.Title, "en2");
             return new MdAnimatedBlock
             {
                 Code = $"\n\n\n\n    {s.Title}",
-                TtsText = new MultiLanguageText
-                {
-                    Phrases = new List<UniLangPhrase> { new UniLangPhrase { Lang = "en2", Text = s.Title } }
-                }
+                TtsText = ttsText,
             };
         }
 

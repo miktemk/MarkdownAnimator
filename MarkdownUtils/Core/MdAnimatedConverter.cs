@@ -111,7 +111,7 @@ namespace MarkdownUtils.Core
 
                     var builderTotal = new StringBuilder();
                     var keyPoints = new List<TtsKeyPoint>();
-                    var ttsText = new MultiLanguageText();
+                    var ttsText = new MultiLangStringPhrased();
 
                     // .... join all flat texts into TTS multilang string and build keypoints where they occur in this sequence
                     eventizedTtsText.EnumerateSublistsEndingWith(x => x.Lang != null,
@@ -138,21 +138,13 @@ namespace MarkdownUtils.Core
                             }
                             if (builderUpToTts.Length > 0)
                             {
-                                ttsText.Phrases.Add(new UniLangPhrase
-                                {
-                                    Lang = "en", //TODO: define default language
-                                    Text = builderUpToTts.ToString()
-                                });
+                                ttsText.AddPhrase(builderUpToTts.ToString(), "en"); //TODO: define default language
                             }
                             // .... handle other language segment
                             if (ttsEvent != null)
                             {
                                 builderTotal.Append(ttsEvent.Text);
-                                ttsText.Phrases.Add(new UniLangPhrase
-                                {
-                                    Lang = ttsEvent.Lang,
-                                    Text = ttsEvent.Text,
-                                });
+                                ttsText.AddPhrase(ttsEvent.Text, ttsEvent.Lang);
                             }
                         });
 

@@ -21,13 +21,13 @@ namespace MarkdownUtils.MdAnimated
     public class MdAnimatedBlock
     {
         public string Code { get; set; }
-        public MultiLanguageText TtsText { get; set; }
+        public MultiLangStringPhrased TtsText { get; set; }
         public string TtsTextString { get; set; }
         public List<TtsKeyPoint> KeyPoints { get; set; }
 
         public MdAnimatedBlock()
         {
-            TtsText = new MultiLanguageText();
+            TtsText = new MultiLangStringPhrased();
             KeyPoints = new List<TtsKeyPoint>();
         }
     }

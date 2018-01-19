@@ -53,7 +53,7 @@ namespace MarkdownAnimator.ViewModel
             var docPager = funcGetDocPager();
             if (docPager.CurPage == null)
                 return;
-            ttsService.SayAsyncMany(docPager.CurPage.TtsText, 0, (phrase, index) =>
+            ttsService.SayAsyncMany(docPager.CurPage.TtsText, (phrase, index) =>
             {
                 if (index > 0)
                 {
@@ -62,7 +62,7 @@ namespace MarkdownAnimator.ViewModel
                 }
                 if (phrase == null) // .... AKA last
                     GoToNextPage();
-            });
+            }, 0, 0);
 
             Debug.WriteLine("========== page ============");
             Debug.WriteLine($"new-code: {docPager.CurPage.Code}");
@@ -82,9 +82,9 @@ namespace MarkdownAnimator.ViewModel
                 IsPlaying = false;
         }
 
-        private void wordCallback(string str, int index, int len)
+        private void wordCallback(string text, int offset, int start, int length)
         {
-            var indexTotal = index + lengthsOfPreviouslySaidPhrases;
+            var indexTotal = offset + lengthsOfPreviouslySaidPhrases;
             var docPager = funcGetDocPager();
             docPager.ReadUntilThisPoint(indexTotal);
         }
